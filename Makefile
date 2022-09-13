@@ -6,6 +6,8 @@ OBJS=$(SRCS:.c=.o)
 chibicc: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+$(OBJS): chibicc.h
+
 test: chibicc
 	./test.sh
 
