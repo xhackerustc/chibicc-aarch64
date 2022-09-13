@@ -1,0 +1,9 @@
+**/*~
+**/\#*
+**/*.o
+**/*.s
+**/a.out
+/tmp*
+/thirdparty
+/chibicc
+/stage2
