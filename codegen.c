@@ -2,6 +2,11 @@
 
 static int depth;
 
+static int count(void) {
+  static int i = 1;
+  return i++;
+}
+
 static void push(void) {
   printf("  str x0, [sp, #-8]!\n");
   depth++;
@@ -93,6 +98,18 @@ static void gen_expr(Node *node) {
 
 static void gen_stmt(Node *node) {
   switch (node->kind) {
+  case ND_IF: {
+    int c = count();
+    gen_expr(node->cond);
+    printf("  cbz x0, .L.else.%d\n", c);
+    gen_stmt(node->then);
+    printf("  b .L.end.%d\n", c);
+    printf(".L.else.%d:\n", c);
+    if (node->els)
+      gen_stmt(node->els);
+    printf(".L.end.%d:\n", c);
+    return;
+  }
   case ND_BLOCK:
     for (Node *n = node->body; n; n = n->next)
       gen_stmt(n);
