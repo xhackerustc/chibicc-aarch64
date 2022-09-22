@@ -14,7 +14,7 @@ assert() {
   expected="$1"
   input="$2"
 
-  ./chibicc "$input" > tmp.s || exit
+  echo "$input" | ./chibicc - > tmp.s || exit
   aarch64-linux-gnu-gcc -static -o tmp tmp.s tmp2.o
   qemu-aarch64-static ./tmp
   actual="$?"
