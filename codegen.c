@@ -82,6 +82,8 @@ static void load(Type *ty) {
 
   if (ty->size == 1)
     println("  ldrb w0, [x0]");
+  else if (ty->size == 2)
+    println("  ldrh w0, [x0]");
   else if (ty->size == 4)
     println("  ldr w0, [x0]");
   else
@@ -102,6 +104,8 @@ static void store(Type *ty) {
 
   if (ty->size == 1)
     println("  strb w0, [x1]");
+  else if (ty->size == 2)
+    println("  strh w0, [x1]");
   else if (ty->size == 4)
     println("  str w0, [x1]");
   else
@@ -287,6 +291,9 @@ static void store_gp(int r, int offset, int sz) {
   switch (sz) {
   case 1:
     println("  strb %s, [x29, #%d]", argreg8[r], offset);
+    return;
+  case 2:
+    println("  strh %s, [x29, #%d]", argreg8[r], offset);
     return;
   case 4:
     println("  str %s, [x29, #%d]", argreg8[r], offset);
