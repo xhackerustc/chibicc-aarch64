@@ -1,7 +1,8 @@
 #include "chibicc.h"
 
 static int depth;
-static char *argreg[] = {"x0", "x1", "x2", "x3", "x4", "x5"};
+static char *argreg8[] = {"w0", "w1", "w2", "w3", "w4", "w5"};
+static char *argreg64[] = {"x0", "x1", "x2", "x3", "x4", "x5"};
 static Obj *current_fn;
 
 static void gen_expr(Node *node);
@@ -61,13 +62,20 @@ static void load(Type *ty) {
     return;
   }
 
-  printf("  ldr x0, [x0]\n");
+  if (ty->size == 1)
+    printf("  ldrb w0, [x0]\n");
+  else
+    printf("  ldr x0, [x0]\n");
 }
 
 // Store %rax to an address that the stack top is pointing to.
-static void store(void) {
+static void store(Type *ty) {
   pop("x1");
-  printf("  str x0, [x1]\n");
+
+  if (ty->size == 1)
+    printf("  strb w0, [x1]\n");
+  else
+    printf("  str x0, [x1]\n");
 }
 
 // Generate code for a given node.
@@ -95,7 +103,7 @@ static void gen_expr(Node *node) {
     gen_addr(node->lhs);
     push();
     gen_expr(node->rhs);
-    store();
+    store(node->ty);
     return;
   case ND_FUNCALL: {
     int nargs = 0;
@@ -106,7 +114,7 @@ static void gen_expr(Node *node) {
     }
 
     for (int i = nargs - 1; i >= 0; i--)
-      pop(argreg[i]);
+      pop(argreg64[i]);
 
     printf("  bl %s\n", node->funcname);
     return;
@@ -242,8 +250,12 @@ static void emit_text(Obj *prog) {
 
     // Save passed-by-register arguments to the stack
     int i = 0;
-    for (Obj *var = fn->params; var; var = var->next)
-      printf("  str %s, [x29, #%d]\n", argreg[i++], var->offset);
+    for (Obj *var = fn->params; var; var = var->next) {
+      if (var->ty->size == 1)
+        printf("  strb %s, [x29, #%d]\n", argreg8[i++], var->offset);
+      else
+        printf("  str %s, [x29, #%d]\n", argreg64[i++], var->offset);
+    }
 
     // Emit code
     gen_stmt(fn->body);
